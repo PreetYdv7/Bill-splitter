@@ -1,4 +1,4 @@
-import { Children, useState } from "react";
+import { useState } from "react";
 
 const initialFriends = [
   {
@@ -30,28 +30,37 @@ const Button = ({ children, onClick }) => {
 };
 
 export default function App() {
+  const [friends, setFriends] = useState(initialFriends);
+
   const [showAddFriend, setShowAddFriend] = useState(false);
 
   const handleShowAddFriend = () => {
     setShowAddFriend((show) => !show);
   };
 
+  const handleAddFriend = (friend) => {
+    setFriends((friends) => [...friends, friend]);
+    setShowAddFriend(false);
+  };
+
   return (
     <div className="app">
       <div className="sidebar">
-        <FriendsList />
-        {showAddFriend && <FormAddFriend />}
+        <FriendsList friends={friends} />
+
+        {showAddFriend && <FormAddFriend onAddFriend={handleAddFriend} />}
+
         <Button onClick={handleShowAddFriend}>
-          {showAddFriend ? "close" : "Add Friend"}
+          {showAddFriend ? "Close" : "Add Friend"}
         </Button>
       </div>
+
       <FormSplitBill />
     </div>
   );
 }
 
-const FriendsList = () => {
-  const friends = initialFriends;
+const FriendsList = ({ friends }) => {
   return (
     <ul>
       {friends.map((friend) => (
@@ -65,6 +74,7 @@ const Friend = ({ friend }) => {
   return (
     <li>
       <img src={friend.image} alt={friend.name} />
+
       <h3>{friend.name}</h3>
 
       {friend.balance < 0 && (
@@ -72,26 +82,61 @@ const Friend = ({ friend }) => {
           You owe {friend.name} {Math.abs(friend.balance)} $
         </p>
       )}
+
       {friend.balance > 0 && (
         <p className="green">
-          {friend.name} owes You {Math.abs(friend.balance)} $
+          {friend.name} owes you {Math.abs(friend.balance)} $
         </p>
       )}
+
       {friend.balance === 0 && <p>You and {friend.name} are even.</p>}
+
       <Button>Select</Button>
     </li>
   );
 };
 
-const FormAddFriend = () => {
-  return (
-    <form className="form-add-friend">
-      <label>Friend name👥</label>
-      <input type="text"></input>
+const FormAddFriend = ({ onAddFriend }) => {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("https://i.pravatar.cc/48");
 
-      <label> Image URL </label>
-      <input type="text"></input>
-      <Button>Add </Button>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!name || !image) return;
+
+    const id = crypto.randomUUID();
+
+    const newFriend = {
+      name,
+      image: `${image}?u=${id}`,
+      balance: 0,
+      id: id,
+    };
+
+    onAddFriend(newFriend);
+
+    setName("");
+    setImage("https://i.pravatar.cc/48");
+  };
+
+  return (
+    <form className="form-add-friend" onSubmit={handleSubmit}>
+      <label>Friend Name 👥</label>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+
+      <label>Image URL</label>
+      <input
+        type="text"
+        value={image}
+        onChange={(e) => setImage(e.target.value)}
+      />
+
+      <Button>Add Friend</Button>
     </form>
   );
 };
@@ -99,18 +144,18 @@ const FormAddFriend = () => {
 const FormSplitBill = () => {
   return (
     <form className="form-split-bill">
-      <h2>Split a bill with X</h2>
+      <h2>Split a Bill with X</h2>
 
-      <label> Bill value🤑 </label>
+      <label>Bill Value 🤑</label>
       <input type="text" />
 
-      <label> Your expense </label>
+      <label>Your Expense</label>
       <input type="text" />
 
-      <label> X's expense </label>
+      <label>X's Expense</label>
       <input type="text" />
 
-      <label>Who is paying the bill? 💳</label>
+      <label>Who is Paying the Bill? 💳</label>
       <select>
         <option value="user">You</option>
         <option value="friend">X</option>
